@@ -1,1 +1,426 @@
-<!-- AI Threat Detection Dashboard -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Threat Detection Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- TOP BAR -->
+
+    <header class="topbar">
+
+        <div>
+            <h1>🛡️ AI Threat Detection Dashboard</h1>
+
+            <p>
+                Real-Time Security Monitoring & AI Anomaly Detection
+            </p>
+        </div>
+
+        <div class="status">
+            <span class="status-dot"></span>
+            SYSTEM ONLINE
+        </div>
+
+    </header>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="container">
+
+
+        <!-- STATISTICS -->
+
+        <section class="stats">
+
+            <div class="card">
+                <h3>Total Events</h3>
+                <p>{{ total_events }}</p>
+            </div>
+
+
+            <div class="card">
+                <h3>Threats Detected</h3>
+                <p>{{ threats }}</p>
+            </div>
+
+
+            <div class="card">
+                <h3>High Risk</h3>
+                <p>{{ high_risk }}</p>
+            </div>
+
+
+            <div class="card">
+                <h3>AI Anomalies</h3>
+                <p>{{ ai_anomalies }}</p>
+            </div>
+
+        </section>
+
+
+        <!-- SECURITY EVENTS -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <h2>🚨 Security Events</h2>
+
+                <button onclick="updateDashboard()">
+                    🔄 Refresh
+                </button>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Time</th>
+                            <th>Event</th>
+                            <th>IP Address</th>
+                            <th>User</th>
+                            <th>Severity</th>
+                            <th>Threat Type</th>
+                            <th>Risk</th>
+                            <th>AI</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for event in events %}
+
+                        <tr>
+
+                            <td>
+                                {{ event["timestamp"] }}
+                            </td>
+
+
+                            <td>
+                                {{ event["event_type"] }}
+                            </td>
+
+
+                            <td>
+                                {{ event["ip"] }}
+                            </td>
+
+
+                            <td>
+                                {{ event["username"] }}
+                            </td>
+
+
+                            <td>
+
+                                {% if event["severity"] == "HIGH" %}
+
+                                <span class="badge high">
+                                    HIGH
+                                </span>
+
+                                {% elif event["severity"] == "MEDIUM" %}
+
+                                <span class="badge medium">
+                                    MEDIUM
+                                </span>
+
+                                {% else %}
+
+                                <span class="badge low">
+                                    LOW
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+                                {{ event["threat_type"] }}
+                            </td>
+
+
+                            <td>
+
+                                <span class="risk">
+                                    {{ event["risk_score"] }}
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                {% if event["ai_anomaly"] == 1 %}
+
+                                <span class="ai-detected">
+                                    🤖 DETECTED
+                                </span>
+
+                                {% else %}
+
+                                <span class="normal">
+                                    NORMAL
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- FOOTER -->
+
+    <footer>
+
+        AI Threat Detection Dashboard
+
+        <span>•</span>
+
+        Flask + SQLite + Scikit-learn
+
+    </footer>
+
+
+    <!-- REAL-TIME DASHBOARD -->
+
+    <script>
+
+        async function updateDashboard() {
+
+            try {
+
+                const response = await fetch("/api/events");
+
+                if (!response.ok) {
+                    throw new Error("API request failed");
+                }
+
+                const events = await response.json();
+
+
+                /* =========================
+                   UPDATE STATISTICS
+                   ========================= */
+
+                const totalEvents =
+                    events.length;
+
+
+                const threats =
+                    events.filter(
+                        event => event.threat === 1
+                    ).length;
+
+
+                const highRisk =
+                    events.filter(
+                        event => event.risk_score >= 70
+                    ).length;
+
+
+                const aiAnomalies =
+                    events.filter(
+                        event => event.ai_anomaly === 1
+                    ).length;
+
+
+                const cards =
+                    document.querySelectorAll(
+                        ".card p"
+                    );
+
+
+                if (cards.length >= 4) {
+
+                    cards[0].textContent =
+                        totalEvents;
+
+                    cards[1].textContent =
+                        threats;
+
+                    cards[2].textContent =
+                        highRisk;
+
+                    cards[3].textContent =
+                        aiAnomalies;
+                }
+
+
+                /* =========================
+                   UPDATE EVENT TABLE
+                   ========================= */
+
+                const tbody =
+                    document.querySelector("tbody");
+
+
+                if (!tbody) {
+                    return;
+                }
+
+
+                tbody.innerHTML = "";
+
+
+                events.forEach(event => {
+
+
+                    /* Severity */
+
+                    let severityClass = "low";
+
+
+                    if (event.severity === "HIGH") {
+
+                        severityClass = "high";
+
+                    }
+
+                    else if (
+                        event.severity === "MEDIUM"
+                    ) {
+
+                        severityClass = "medium";
+
+                    }
+
+
+                    /* AI Status */
+
+                    let aiStatus = "";
+
+
+                    if (event.ai_anomaly === 1) {
+
+                        aiStatus =
+                            '<span class="ai-detected">🤖 DETECTED</span>';
+
+                    }
+
+                    else {
+
+                        aiStatus =
+                            '<span class="normal">NORMAL</span>';
+
+                    }
+
+
+                    /* Create Row */
+
+                    const row =
+                        document.createElement("tr");
+
+
+                    row.innerHTML = `
+
+                        <td>
+                            ${event.timestamp}
+                        </td>
+
+                        <td>
+                            ${event.event_type}
+                        </td>
+
+                        <td>
+                            ${event.ip}
+                        </td>
+
+                        <td>
+                            ${event.username}
+                        </td>
+
+                        <td>
+
+                            <span class="badge ${severityClass}">
+                                ${event.severity}
+                            </span>
+
+                        </td>
+
+                        <td>
+                            ${event.threat_type}
+                        </td>
+
+                        <td>
+
+                            <span class="risk">
+                                ${event.risk_score}
+                            </span>
+
+                        </td>
+
+                        <td>
+                            ${aiStatus}
+                        </td>
+
+                    `;
+
+
+                    tbody.appendChild(row);
+
+                });
+
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Dashboard update failed:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /* =========================
+           AUTO UPDATE
+           ========================= */
+
+        setInterval(
+            updateDashboard,
+            5000
+        );
+
+
+    </script>
+
+
+</body>
+
+</html>
