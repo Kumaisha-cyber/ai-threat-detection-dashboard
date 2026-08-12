@@ -59,6 +59,12 @@ def dashboard():
         ai_anomalies=ai_anomalies
     )
 
+@app.route("/health")
+def health():
+    return jsonify({
+        "status": "online",
+        "service": "AI Threat Detection Dashboard"
+    })
 
 @app.route("/api/events")
 def api_events():
@@ -68,6 +74,7 @@ def api_events():
     data = []
 
     for event in events:
+
         data.append({
             "id": event["id"],
             "timestamp": event["timestamp"],
@@ -83,6 +90,7 @@ def api_events():
         })
 
     return jsonify(data)
+
 
 
 if __name__ == "__main__":
